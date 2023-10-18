@@ -1,29 +1,41 @@
-// app.js
 const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
+const mongoose = require('mongoose');
 const app = express();
 app.use(express.json());
 
+// Connect to the MongoDB database
+mongoose.connect('mongodb://127.0.0.1:27017/bdtp2', { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    console.log("Connected to DB");
+  })
+  .catch((err) => {
+    console.error("Error connecting to DB:", err);
+  });
 
+const User = mongoose.model('User', new mongoose.Schema({
+  username: String,
+  password: String
+}));
 
-const livreRouter = require('./books');
-const { registerUser,User } = require('./User');
+// Dummy books data
+const books = [
+  { title: 'Book 1', author: 'Author 1' },
+  { title: 'Book 2', author: 'Author 2' },
+  // Add more books as needed
+];
+
 app.use(express.urlencoded({ extended: true }));
 
-
-// declaration de la session 
+// Session configuration
 app.use(session({
   secret: 'your-secret-key',
   resave: false,
   saveUninitialized: false,
 }));
 
-
-// configurer le moteur de rendu de vues et définir le répertoire où se trouvent les fichiers de vues
-app.set('view engine', 'pug');
-app.set('views', './views');
-
+// Middleware to check authentication for /livres routes
 app.use('/livres', (req, res, next) => {
   if (req.session.isAuthenticated) {
     next();
@@ -31,19 +43,18 @@ app.use('/livres', (req, res, next) => {
     res.status(401).json({ message: 'Authentication required.' });
   }
 });
-app.use('/livres', livreRouter);
-// app.use('/auth', authRouter);
 
+// Books route
+app.get('/livres', (req, res) => {
+  res.json(books);
+});
 
-
-// envoyer Registration.pug  en réponse à la requête HTTP.
+// Registration route
 app.get('/register', (req, res) => {
   res.render('Register.pug');
 });
 
-
-//Enregistre un nouvel utilisateur dans le système
-app.post('/register', (req, res) => {
+app.post('/register', async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -52,22 +63,25 @@ app.post('/register', (req, res) => {
   }
 
   try {
-    registerUser(username, password); // Appel correct à registerUser
-    
-    res.redirect('/login')
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({
+      username,
+      password: hashedPassword,
+    });
+
+    await user.save();
+    res.redirect('/login');
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', error);
     res.status(500).json({ message: 'Erreur lors de l\'enregistrement de l\'utilisateur.' });
   }
 });
 
-
-// Afficher la page de connexion
+// Login route
 app.get('/login', (req, res) => {
-  res.render('Login'); 
+  res.render('Login.pug');
 });
 
-// Gère l'authentification de l'utilisateur 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
@@ -82,7 +96,7 @@ app.post('/login', async (req, res) => {
 
     if (isPasswordValid) {
       req.session.isAuthenticated = true;
-      res.redirect('/livres'); // Redirect to the books page
+      res.redirect('/livres');
     } else {
       res.status(401).json({ message: 'Identifiants invalides.' });
     }
@@ -92,6 +106,8 @@ app.post('/login', async (req, res) => {
   }
 });
 
+app.set('view engine', 'pug');
+app.set('views', './views');
 
 app.listen(5000, () => {
   console.log('Port running on 5000');
