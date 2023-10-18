@@ -1,0 +1,9 @@
+
+html
+  head
+    title Liste des Livres
+  body
+    h1 Liste des Livres
+    ul
+      each book in books
+        li= book.title + ' par ' + book.author
