@@ -4,19 +4,18 @@
     "description": "Your project description",
     "main": "app.js",
     "scripts": {
-      "start": "node app.js",
-      "build-css": "tailwindcss build public/styles.css -o public/build.css"
-
+        "start": "node app.js",
+        "build-css": "tailwindcss build public/styles.css -o public/build.css"
     },
     "dependencies": {
-      "express": "^4.17.1",
-      "mongoose": "^5.13.2",
-      "passport": "^0.4.1",
-      "passport-local": "^1.0.0",
-      "express-session": "^1.17.2",
-      "pug": "^3.0.2",
-      "tailwindcss": "^2.2.15"
-    },
-    "devDependencies": {}
-  }
-  
+        "bcrypt": "^5.1.1",
+        "express": "^4.17.1",
+        "express-session": "^1.17.2",
+        "mongoose": "^5.13.2",
+        "passport": "^0.4.1",
+        "passport-local": "^1.0.0",
+        "passport-local-mongoose": "^8.0.0",
+        "pug": "^3.0.2",
+        "tailwindcss": "^2.2.15"
+    }
+}
